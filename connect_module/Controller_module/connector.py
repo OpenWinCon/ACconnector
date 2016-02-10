@@ -7,15 +7,14 @@ from connection_module import *
 
 
 def controller_module():
-    cmd = 'iptables -A INPUT -d 8.8.8.8 -j NFQUEUE --queue-num 1'
+    cmd = 'iptables -A FORWARD -d 8.8.8.8 -j NFQUEUE --queue-num 1'
     p1 = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
     while True:
         print 'Remote AP - Controller connector (Controller module)'
         print '1. List current connection'
-        print '2. '
+        print '2. Packet filtering mode'
         print '3. Program quit'
-
 
         try:
             print 'Select mode: ',
