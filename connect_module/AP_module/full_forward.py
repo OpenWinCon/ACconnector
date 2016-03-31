@@ -27,13 +27,13 @@ def full_forward_func():
     cmd = 'ip rule add fwmark 10 table full_forward'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
-    cmd = 'ip route add default dev ppp0 table full_forward'
+    cmd = 'ip route add default dev tun0 table full_forward'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
-    cmd = 'iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE'
+    cmd = 'iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
-    cmd = 'sysctl -w net.ipv4.conf.ppp0.rp_filter=2'
+    cmd = 'sysctl -w net.ipv4.conf.tun0.rp_filter=2'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
     try:
