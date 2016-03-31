@@ -35,20 +35,10 @@ def setting_mode():
             print
 
         elif selection == 2:
-            print
-            print 'Setting Name: ',
-            setting_name = raw_input()
-
-            print 'Server IP: ',
-            server_ip = raw_input()
-
-            print 'Username: ',
-            username = raw_input()
-
-            sm.add_setting(setting_name, server_ip, username)
+            sm.add_setting()
 
         elif selection == 3:
-            pass
+            sm.del_setting()
 
         elif selection == 4:
             return

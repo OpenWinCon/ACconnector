@@ -6,7 +6,17 @@ import subprocess
 OPENVPN_FOLDER = '/etc/openvpn'
 
 
-def add_setting(setting_name, server_ip, username):
+def add_setting():
+    print
+    print 'Setting Name: ',
+    setting_name = raw_input()
+
+    print 'Server IP: ',
+    server_ip = raw_input()
+
+    print 'Username: ',
+    username = raw_input()
+
     subprocess.call('mkdir /etc/openvpn/settings/%s' % setting_name, shell=True)
     subprocess.call('mkdir /etc/openvpn/settings/%s/keys' % setting_name, shell=True)
 
@@ -33,7 +43,7 @@ def add_setting(setting_name, server_ip, username):
 
         file_new_content.append(line)
         
-    fp = open('/etc/openvpn/settings/%s/clinet.conf' % setting_name, 'w')
+    fp = open('/etc/openvpn/settings/%s/client.conf' % setting_name, 'w')
 
     for line in file_new_content:
         fp.write(line + '\n')
@@ -41,11 +51,37 @@ def add_setting(setting_name, server_ip, username):
     setting_lst = list_settings()
 
     fp = open('/etc/openvpn/settings/server.settings', 'w')
-    for k, v in setting_lst.iteritems():
+    for k, v in sorted(setting_lst.iteritems()):
         fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
 
     fp.write('%s,%s,%s\n' % (setting_name, server_ip, 'False'))
 
+
+def del_setting():
+    setting_lst = list_settings()
+
+    print 'Setting Name\tServer IP\tConnection Status'
+    for k, v in setting_lst.iteritems():
+        print '%s\t\t%s\t%s' % (k, v['server_ip'], v['status'])
+    print
+
+    print 'Select setting you want to delete: ',
+    setting_name = raw_input()
+
+    if setting_name not in setting_lst:
+        print '%s does not exist in settings' % setting_name
+        return
+
+    setting_lst.pop(setting_name, None)
+
+    fp = open('/etc/openvpn/settings/server.settings', 'w')
+    for k, v in sorted(setting_lst.iteritems()):
+        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
+    fp.close()
+
+    subprocess.call('rm -rf /etc/openvpn/settings/%s' % setting_name, shell=True)
+
+    print 'Setting %s deleted\n' % setting_name
 
 def list_settings():
     try:
