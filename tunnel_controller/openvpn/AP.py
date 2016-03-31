@@ -5,11 +5,45 @@ import os
 import connection_mode as cm
 import setting_mode as sm
 
+
 OPENVPN_FOLDER = '/etc/openvpn'
+
+
+def tunnel_control():
+    while True:
+        print
+        print 'Host AP Tunnel Controller'
+        print '1. Setting mode'
+        print '2. Connection mode'
+        print '3. Quit'
+
+        try:
+            print 'Select mode: ',
+            selection = int(raw_input())
+
+        except ValueError:
+            print 'Enter proper number (1~3)'
+            continue
+
+        if selection == 1:
+            setting_mode() 
+                    
+        elif selection == 2:
+            connection_mode() 
+
+        elif selection == 3:
+            print
+            print 'Qutting tunnel controller'
+            return 
+
+        else:
+            print 'Enter proper number (1~3)'
+
 
 
 def setting_mode():
     while True:
+        print
         print 'Host AP Tunnel Controller (OpenVPN) - Setting'
         print '1. List current OpenVPN settings'
         print '2. Add new OpenVPN server'
@@ -50,6 +84,7 @@ def setting_mode():
 
 def connection_mode():
     while True:
+        print
         print 'Host AP Tunnel Controller (OpenVPN) - Connection'
         print '1. List current active OpenVPN connections'
         print '2. Activate connection'
@@ -91,5 +126,5 @@ def connection_mode():
             print 'Enter proper number'
             print
 
-setting_mode()
+#setting_mode()
 #connection_mode()

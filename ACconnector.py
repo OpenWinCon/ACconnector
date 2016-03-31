@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from connect_module.AP_module.connector import *
-from tunnel_controller.HostAP.HostAP import *
+#from connect_module.AP_module.connector import *
+#from tunnel_controller.HostAP.HostAP import *
+import tunnel_controller.openvpn.AP as oap
 
 def main():
     while True:
@@ -20,7 +21,7 @@ def main():
             continue
 
         if selection == 1:
-            tunnel_control()
+            oap.tunnel_control()
                     
         elif selection == 2:
             control_delegation()
