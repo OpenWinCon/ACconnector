@@ -24,38 +24,41 @@ def full_forward_func():
     nfq = NetfilterQueue()
     nfq.bind(1, pkt_filter_callback)
 
+    cmd = 'iptables -t mangle -I PREROUTING -i eth1 -j NFQUEUE --queue-num 1'
+    subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
+
     cmd = 'ip rule add fwmark 10 table full_forward'
-    subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+    subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
-    cmd = 'ip route add default dev ppp0 table full_forward'
-    subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+    cmd = 'ip route add default dev tun0 table full_forward'
+    subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
-    cmd = 'iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE'
-    subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+    cmd = 'iptables -t nat -I POSTROUTING -o tun0 -j MASQUERADE'
+    subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
-    cmd = 'sysctl -w net.ipv4.conf.ppp0.rp_filter=2'
-    subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+    cmd = 'sysctl -w net.ipv4.conf.tun0.rp_filter=2'
+    subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
     try:
+        print
         print 'Full forward mode - Starting to forwarding every packet'
         nfq.run()
 
     except KeyboardInterrupt:
+        print
         print 'Quitting full forward mode'
-        nfq.unbind()
+        #nfq.unbind()
+
+        cmd = 'iptables -t mangle -D PREROUTING 1'
+        subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'ip rule del table full_forward' 
-        p1 = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        p1 = subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'ip route flush table full_forward'
-        p2 = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        p2 = subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'iptables -t nat -D POSTROUTING 1'
-        p3 = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        p3 = subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
-        p1.kill()
-        p2.kill()
-        p3.kill()
-        
-        raise KeyboardInterrupt
-
+    return
