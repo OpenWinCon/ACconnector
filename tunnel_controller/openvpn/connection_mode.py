@@ -104,21 +104,29 @@ def del_active_connection():
 
     if connection_name not in connections:
         print '%s connection is not active or does not exist in settings' % connection_name
+        return
 
-    else:
-        result_process = subprocess.Popen("ps -ax | grep 'openvpn --config /etc/openvpn/settings/%s'" % connection_name, shell=True, stdout=subprocess.PIPE)
+    result_process = subprocess.Popen("ps -ax | grep 'openvpn --config /etc/openvpn/settings/%s'" % connection_name, shell=True, stdout=subprocess.PIPE)
 
-        lines = result_process.stdout.readlines()
-        result_process_id = int(lines[1].split(' ')[0])
+    lines = result_process.stdout.readlines()
+    result_process_id = int(lines[1].split(' ')[0])
 
-        subprocess.Popen("kill -9 %d" % result_process_id, shell=True)
+    subprocess.Popen("kill -9 %d" % result_process_id, shell=True)
 
-        connections.pop('%s' % connection_name, None)
+    connections.pop('%s' % connection_name, None)
     
     fp = open('/etc/openvpn/connection.settings', 'w')
 
     for k, v in connections.iteritems():
         fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
 
+    fp.close()
+
+    setting_lst = sm.list_settings()
+    setting_lst[connection_name]['status'] = False
+
+    fp = open('/etc/openvpn/settings/server.settings', 'w')
+    for k, v in setting_lst.iteritems():
+        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
     fp.close()
 
