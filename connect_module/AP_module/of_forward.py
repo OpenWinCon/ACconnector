@@ -32,29 +32,39 @@ def of_forward_func():
     nfq = NetfilterQueue()
     nfq.bind(1, pkt_filter_callback)
 
+    cmd = 'iptables -t mangle -I PREROUTING -i eth1 -p tcp --dport 6633 -j NFQUEUE --queue-num 1'
+    subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
+
     cmd = 'ip rule add fwmark 30 table of_forward'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
-    cmd = 'ip route add default dev ppp0 table of_forward'
+    cmd = 'ip route add default dev tun0 table of_forward'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
 
-    cmd = 'iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE'
+    cmd = 'iptables -t nat -I POSTROUTING -o tun0 -j MASQUERADE'
     subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+
+    cmd = 'sysctl -w net.ipv4.conf.tun0.rp_filter=2'
+    subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
+
 
     try:
-        print 'Full forward mode - Starting to forwarding Openflow packet'
+        print 'OF forward mode - Starting to forwarding Openflow packet'
         nfq.run()
 
     except KeyboardInterrupt:
         print 'Quitting Openflow packet forward mode'
-        nfq.unbind()
+        
+        cmd = 'iptables -t mangle -D PREROUTING 1'
+        subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'ip rule del table of_forward' 
-        subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'ip route flush table of_forward'
-        subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 
         cmd = 'iptables -t nat -D POSTROUTING 1'
-        subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 
+    return
