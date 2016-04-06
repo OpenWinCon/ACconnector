@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#from connect_module.AP_module.connector import *
+from connect_module.AP_module.connector import *
 #from tunnel_controller.HostAP.HostAP import *
 import tunnel_controller.openvpn.AP as oap
 

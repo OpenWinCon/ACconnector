@@ -109,7 +109,7 @@ def del_active_connection():
     result_process = subprocess.Popen("ps -ax | grep 'openvpn --config /etc/openvpn/settings/%s'" % connection_name, shell=True, stdout=subprocess.PIPE)
 
     lines = result_process.stdout.readlines()
-    result_process_id = int(lines[1].split(' ')[0])
+    result_process_id = int(lines[1].strip().split(' ')[0])
 
     subprocess.Popen("kill -9 %d" % result_process_id, shell=True)
 
