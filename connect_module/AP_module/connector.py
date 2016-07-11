@@ -46,9 +46,16 @@ class SettingManager:
         forward_inter = raw_input()
 
         print 'Enter forwarding mode: ',
-        forward_mode = raw_input()
+        forward_mode = int(raw_input())
 
         self.settings[inter_name] = {'forward_inter': forward_inter, 'mode': forward_mode}
+
+        if forward_mode == 2:
+            filter_file_path = os.path.join(os.getcwd(), 'selective_filter_files', inter_name)
+            if not os.path.exists(filter_file_path):
+                os.makedirs(filter_file_path)
+                open(os.path.join(filter_file_path, 'setting_address.csv'), 'w').close()
+                open(os.path.join(filter_file_path, 'setting_protocol.csv'), 'w').close()
 
         with open(self.file_name, 'w') as fp:
             pickle.dump(self.settings, fp)
@@ -161,7 +168,7 @@ def start_forwarding(settings):
     nfq = NetfilterQueue()
     idx = 1
     for inter_name, forward_dic in sorted(settings.iteritems()):
-        forward_inter, forward_mode = forward_dic['forward_inter'], int(forward_dic['mode'])
+        forward_inter, forward_mode = forward_dic['forward_inter'], forward_dic['mode']
         
         #nfq.bind(idx, lambda pkt: print pkt; pkt.set_mark(idx); pkt.accept())
         nfq.bind(idx, make_pkt_callback(idx))
