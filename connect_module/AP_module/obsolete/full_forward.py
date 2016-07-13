@@ -13,14 +13,6 @@ def pkt_filter_callback(packet):
 
 
 def full_forward_func():
-    '''
-    q = nfqueue.queue()
-    q.open()
-    q.bind(socket.AF_INET)
-    q.set_callback(pkt_modify)
-    q.create_queue(1)
-    '''
-
     nfq = NetfilterQueue()
     nfq.bind(1, pkt_filter_callback)
 
