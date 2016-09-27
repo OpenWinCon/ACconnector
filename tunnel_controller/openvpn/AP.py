@@ -15,14 +15,15 @@ def tunnel_control():
         print 'Host AP Tunnel Controller'
         print '1. Setting mode'
         print '2. Connection mode'
-        print '3. Quit'
+        print '0. Quit'
 
         try:
             print 'Select mode: ',
             selection = int(raw_input())
 
         except ValueError:
-            print 'Enter proper number (1~3)'
+            print
+            print 'Enter proper number'
             continue
 
         if selection == 1:
@@ -31,13 +32,16 @@ def tunnel_control():
         elif selection == 2:
             connection_mode() 
 
-        elif selection == 3:
+        elif selection == 0:
             print
             print 'Qutting tunnel controller'
+            print
             return 
 
         else:
-            print 'Enter proper number (1~3)'
+            print
+            print 'Enter proper number'
+            print
 
 
 
@@ -48,25 +52,20 @@ def setting_mode():
         print '1. List current OpenVPN settings'
         print '2. Add new OpenVPN server'
         print '3. Remove OpenVPN server'
-        print '4. Quit'
+        print '0. Quit'
         
         try:
             print 'Select mode: ',
             selection = int(raw_input())
 
         except ValueError:
+            print
             print 'Enter proper number'
             print
             continue
             
         if selection == 1:
-            settings = sm.list_settings()
-
-            print
-            print 'Setting Name\tServer IP\tConnection Status'
-            for k, v in settings.iteritems():
-                print '%s\t\t%s\t%s' % (k, v['server_ip'], v['status'])
-            print
+            settings = sm.print_settings()
 
         elif selection == 2:
             sm.add_setting()
@@ -74,13 +73,13 @@ def setting_mode():
         elif selection == 3:
             sm.del_setting()
 
-        elif selection == 4:
+        elif selection == 0:
             return
         
         else:
+            print
             print 'Enter proper number'
             print
-
 
 def connection_mode():
     while True:
@@ -90,7 +89,7 @@ def connection_mode():
         print '2. Activate connection'
         print '3. Deactive connection'
         print '4. Check connection status'
-        print '5. Quit'
+        print '0. Quit'
 
         try:
             print 'Select mode: ',
@@ -102,14 +101,8 @@ def connection_mode():
             continue
 
         if selection == 1:
-            connection_dic = cm.list_active_connections()
-
-            print
-            print 'Server IP      | status'
-            for k, v in connection_dic.iteritems():
-                print '%s | %s' % (v['server_ip'], v['status']) 
-            print
-
+            cm.print_active_connections()
+            
         elif selection == 2:
             cm.add_active_connection()
         
@@ -117,14 +110,17 @@ def connection_mode():
             cm.del_active_connection()
 
         elif selection == 4:
-            pass
+            cm.check_connection()
 
-        elif selection == 5:
+        elif selection == 0:
             return
 
         else:
             print 'Enter proper number'
             print
 
+
+if __name__ == '__main__':
+    tunnel_control()
 #setting_mode()
 #connection_mode()

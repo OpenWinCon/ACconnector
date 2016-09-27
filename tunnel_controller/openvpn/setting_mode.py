@@ -17,6 +17,9 @@ def add_setting():
     print 'Username: ',
     username = raw_input()
 
+    print 'Specify device name: ',
+    dev_name = raw_input()
+
     subprocess.call('mkdir /etc/openvpn/settings/%s' % setting_name, shell=True)
     subprocess.call('mkdir /etc/openvpn/settings/%s/keys' % setting_name, shell=True)
 
@@ -33,13 +36,20 @@ def add_setting():
     file_new_content = []
     for line in lines:
         if line.startswith('ca'):
-            line = 'ca /etc/openvpn/settings/%s/keys/ca.cert' % setting_name
+            line = 'ca /etc/openvpn/settings/%s/keys/ca.crt' % setting_name
 
         elif line.startswith('cert'):
-            line = 'cert /etc/openvpn/settings/%s/keys/client.cert' % setting_name
+            line = 'cert /etc/openvpn/settings/%s/keys/client.crt' % setting_name
 
         elif line.startswith('key'):
-            line = 'cert /etc/openvpn/settings/%s/keys/client.key' % setting_name
+            line = 'key /etc/openvpn/settings/%s/keys/client.key' % setting_name
+
+        elif line.startswith('dev'):
+            line = 'dev %s\n' % dev_name
+            line += 'dev-type tun'
+
+        elif line.startswith('ifconfig'):
+            vpn_server_addr = line.split(' ')[2]
 
         file_new_content.append(line)
         
@@ -48,42 +58,34 @@ def add_setting():
     for line in file_new_content:
         fp.write(line + '\n')
 
-    setting_lst = list_settings()
+    settings_dic = get_settings_dic()
+    settings_dic[setting_name] = {'server_ip': server_ip, 'status': 'False', 'dev_name': dev_name, 'vpn_server_address': vpn_server_addr}
 
-    fp = open('/etc/openvpn/settings/server.settings', 'w')
-    for k, v in sorted(setting_lst.iteritems()):
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
-
-    fp.write('%s,%s,%s\n' % (setting_name, server_ip, 'False'))
-
+    write_settings_file(settings_dic)
+    
 
 def del_setting():
-    setting_lst = list_settings()
+    settings_dic = get_settings_dic()
 
-    print 'Setting Name\tServer IP\tConnection Status'
-    for k, v in setting_lst.iteritems():
-        print '%s\t\t%s\t%s' % (k, v['server_ip'], v['status'])
-    print
+    print_settings()
 
     print 'Select setting you want to delete: ',
     setting_name = raw_input()
 
-    if setting_name not in setting_lst:
+    if setting_name not in settings_dic:
         print '%s does not exist in settings' % setting_name
         return
 
-    setting_lst.pop(setting_name, None)
-
-    fp = open('/etc/openvpn/settings/server.settings', 'w')
-    for k, v in sorted(setting_lst.iteritems()):
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
-    fp.close()
+    settings_dic.pop(setting_name, None)
+    
+    write_settings_file(settings_dic)
 
     subprocess.call('rm -rf /etc/openvpn/settings/%s' % setting_name, shell=True)
 
     print 'Setting %s deleted\n' % setting_name
 
-def list_settings():
+
+def get_settings_dic():
     try:
         setting_file = open(os.path.join(OPENVPN_FOLDER, 'settings', 'server.settings'), 'r')
 
@@ -103,17 +105,30 @@ def list_settings():
         setting_name = info[0]
         server_ip = info[1]
         status = info[2]
+        dev_name = info[3]
+        vpn_server_addr = info[4]
 
-        settings[setting_name] = {'server_ip': server_ip, 'status': status}
+        settings[setting_name] = {'server_ip': server_ip, 'status': status, 'dev_name': dev_name, 'vpn_server_address': vpn_server_addr}
 
     return settings
 
-    '''
-    if len(settings) == 0:
-        print 'No setting exists'
 
-    else:
-        for subfolder in settings:
-            print subfolder
-    '''     
+def print_settings():
+    settings_dic = get_settings_dic()
+    name_lst = ['Setting Name', 'Server IP', 'Connection Status', 'Dev name']
+    col_width = max(len(name) for name in name_lst) + 2
 
+    print
+    print ''.join(entity.ljust(col_width) for entity in name_lst)
+    for k, v in settings_dic.iteritems():
+        print ''.join(
+                entity.ljust(col_width) for entity in [k, v['server_ip'], v['status'], v['dev_name']])
+
+    print
+
+
+def write_settings_file(settings_dic):
+    fp = open('/etc/openvpn/settings/server.settings', 'w')
+    for k, v in sorted(settings_dic.iteritems()):
+        fp.write('%s,%s,%s,%s,%s\n' % (k, v['server_ip'], v['status'], v['dev_name'], v['vpn_server_address']))
+    fp.close()

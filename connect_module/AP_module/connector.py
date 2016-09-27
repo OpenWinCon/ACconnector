@@ -208,9 +208,13 @@ def start_forwarding(settings):
         idx = 1
         for inter_name, forward_dic in sorted(settings.iteritems()):
             forward_inter, forward_mode = forward_dic['forward_inter'], forward_dic['mode'] 
-            
-            cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
-            subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
+
+            if forward_mode == 1:
+                cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
+                subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
+
+            elif forward_mode == 3:
+                cmd = 'iptables -t mangel -D PREROUTING -i %s -j NFQUEUE --queue-num %d -p tcp --dport 6633' % (inter_name, idx)
 
             cmd = 'ip rule del table %d' % idx
             subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
@@ -268,17 +272,6 @@ def control_delegation():
         except ValueError:
             print 'Enter proper number (1~4)'
             continue
-
-        '''
-        if selection == 1:
-            full_forward_func()
-
-        elif selection == 2:
-            selective_forward_func()
-
-        elif selection == 3:
-            of_forward_func()
-        '''
 
         if selection == 1:
             setting_manager.print_settings()

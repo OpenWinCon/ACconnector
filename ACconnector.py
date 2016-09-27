@@ -10,14 +10,15 @@ def main():
         print 'Remote AP - SDN controller connector'
         print '1. Tunnel control mode'
         print '2. Connecting mode'
-        print '3. Quit'
+        print '0. Quit'
 
         try:
             print 'Select mode: ',
             selection = int(raw_input())
 
         except ValueError:
-            print 'Enter proper number (1~3)'
+            print
+            print 'Enter proper number'
             continue
 
         if selection == 1:
@@ -26,7 +27,7 @@ def main():
         elif selection == 2:
             control_delegation()
                 
-        elif selection == 3:
+        elif selection == 0:
             return
 
 

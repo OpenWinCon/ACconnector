@@ -8,7 +8,7 @@ import setting_mode as sm
 DEVNULL = open(os.devnull, 'w')
 
 
-def list_active_connections():
+def get_active_connections_dic():
     try:
         fp = open('/etc/openvpn/connection.settings', 'r')
 
@@ -22,45 +22,40 @@ def list_active_connections():
     connection_dic = {}
     for line in lines:
         info = line.split(',')
-        connection_name, server_ip, status = info[0], info[1], info[2]
+        connection_name, server_ip, status, dev_name = info[0], info[1], info[2], info[3]
 
         if status == 'True':
-            connection_dic[connection_name] = {'server_ip': server_ip, 'status': status}
-
-    '''
-    fd = subprocess.Popen("ps -ax | grep 'openvpn'", shell=True, stdout=subprocess.PIPE)
-
-    results = list(map(lambda x: x.replace('\n', ''), fd.stdout.readlines()))
-
-    for line in results:
-        if 'grep' not in line and 'sudo' not in line:
-            info = line.split(' ')[12:]
-
-            setting = info[2].split('/')
-            settings[3]
-    '''
+            connection_dic[connection_name] = {'server_ip': server_ip, 'status': status, 'dev_name': dev_name}
 
     return connection_dic
 
 
+def print_active_connections():
+    connections_dic = get_active_connections_dic()
+    print_target_lst = ['Connection name', 'Server IP', 'Status', 'Dev name']
+    col_width = max(17, max(len(name) for name in print_target_lst)) + 2
+
+    print
+    print ''.join(name.ljust(col_width) for name in print_target_lst)
+    for k, v in connections_dic.iteritems():
+        print ''.join(
+                entity.ljust(col_width) for entity in [k, v['server_ip'], v['status'], v['dev_name']])
+    print
+
 def add_active_connection():
-    settings = sm.list_settings()
-    connections = list_active_connections() 
+    settings_dic = sm.get_settings_dic()
+    connections_dic = get_active_connections_dic()
 
-    fp = open('/etc/openvpn/connection.settings', 'w')
 
-    print
-    for k, v in settings.iteritems():
-        print k, v['server_ip'], v['status']
-    print
+    sm.print_settings()
 
     print 'Select connection to activate: ',
     setting_name = raw_input()
     
-    if setting_name not in settings:
+    if setting_name not in settings_dic:
         print '%s does not exist in settings folder' % setting_name
 
-    elif setting_name in connections:
+    elif setting_name in connections_dic:
         print '%s is active connection' % setting_name
         
     else:
@@ -78,31 +73,25 @@ def add_active_connection():
         else:
             print 'Connection successful'
             print 
-            connections[setting_name] = {'server_ip': settings[setting_name]['server_ip'], 'status': True} 
-            settings[setting_name] = {'server_ip': settings[setting_name]['server_ip'], 'status': True}
+            settings_dic[setting_name]['status'] = True
+            connections_dic[setting_name] = settings_dic[setting_name]
 
-
-    for k, v in connections.iteritems():
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
-
-    fp = open('/etc/openvpn/settings/server.settings', 'w')
-    
-    for k, v in settings.iteritems():
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
+    write_active_connections_file(connections_dic)
+    sm.write_settings_file(settings_dic)
         
 
 def del_active_connection():
-    connections = list_active_connections()
+    connections_dic = get_active_connections_dic() 
 
     print
-    for k, v in connections.iteritems():
+    for k, v in connections_dic.iteritems():
         print k, v['server_ip'], v['status']
     print
 
     print 'Select connection to remove: ',
     connection_name = raw_input()
 
-    if connection_name not in connections:
+    if connection_name not in connections_dic:
         print '%s connection is not active or does not exist in settings' % connection_name
         return
 
@@ -113,20 +102,45 @@ def del_active_connection():
 
     subprocess.Popen("kill -9 %d" % result_process_id, shell=True)
 
-    connections.pop('%s' % connection_name, None)
+    connections_dic.pop('%s' % connection_name, None)
     
+    write_active_connections_file(connections_dic)
+
+    settings_dic = sm.get_settings_dic()
+    settings_dic[connection_name]['status'] = False
+    sm.write_settings_file(settings_dic)
+
+
+def write_active_connections_file(connections_dic):
     fp = open('/etc/openvpn/connection.settings', 'w')
 
-    for k, v in connections.iteritems():
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
-
+    for k, v in connections_dic.iteritems():
+        fp.write('%s,%s,%s,%s\n' % (k, v['server_ip'], v['status'], v['dev_name']))
     fp.close()
 
-    setting_lst = sm.list_settings()
-    setting_lst[connection_name]['status'] = False
 
-    fp = open('/etc/openvpn/settings/server.settings', 'w')
-    for k, v in setting_lst.iteritems():
-        fp.write('%s,%s,%s\n' % (k, v['server_ip'], v['status']))
-    fp.close()
+def check_connection():
+    print_active_connections()
 
+    connection_name = raw_input('Check which connection? ')
+    settings_dic = sm.get_settings_dic()
+
+    if connection_name not in settings_dic:
+        print 'Connection does not exist'
+        return 
+
+    target_address = settings_dic[connection_name]['vpn_server_address']
+
+    p = subprocess.Popen('ping -c1 -w5 -q %s > /dev/null; echo $?' % target_address,
+            shell=True, stdout=subprocess.PIPE)
+    result = int(p.communicate()[0])
+
+    if result == 0:
+        print
+        print 'Connection is functional'
+        print
+
+    else:
+        print
+        print 'Connection is impaired'
+        print
