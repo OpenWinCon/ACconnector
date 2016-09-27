@@ -23,14 +23,34 @@ OpenVPN 서버의 자세한 구성에 대해서는 https://www.digitalocean.com/
 
 ### Connection Manager
 이 모듈에서는 AP들에서 들어오는 Control, Data packet들을 올바른 목적지로 터널을 이용해 전송시키는 것을 목적으로 합니다.
-현 버전에서는 AP가 연결된 물리 interface와 packet을 내보내야 할 tunnel을 프로그램에서 mapping 시켜놓고 이를 저장해두고
+AP가 연결된 물리 interface와 packet을 내보내야 할 tunnel을 프로그램에서 mapping 시켜놓고 이를 저장해두고
 실제 forwarding을 수행하게 됩니다.
 
-포워딩 모드는 총 3종류로 data packet을 전부 forwarding, data packet을 selective하게 forwarding, OVS control traffic만을
-forwarding하는 경우로 나눠집니다.
-포워딩 방법은 해당 물리 interface에서 들어오는 패킷 중 터널을 통해 전송해야 하는 패킷을 linux에서 지원하는 netfilter queue에 넣고
-이 패킷을 검사해서 마킹을 한 뒤, ip rule에 특정 마크를 가진 패킷이 어느 ip route table을 이용해야 하는지 지정하는 방식으로 동작합니다.
-해당 table은 특정 터널을 default route로 가지도록 설정되어 있으므로 마킹된 패킷은 정해진 터널만을 타고 목적지까지 도달하게 됩니다.
+#### Forwarding modes
+1. Full forward: 모든 패킷을 포워딩
+2. Selective forward: 선택적으로 패킷을 포워딩
+3. OF forward: Openflow 패킷만 포워딩
+
+#### Forwarding method
+1. ip rule에 특정 마크를 가진 패킷이 어떤 route table을 이용해야 하는지 설정  
+  ```
+  ip rule add fwmark 0 table 0
+  ip route add default tun0 table 0
+  ```    
+  
+2. Iptable을 이용해 물리 interface에서 들어오는 패킷 중 터널을 통해 전송해야 하는 패킷을 netfilter queue에 넣음
+  ```
+  iptables -t mangle -I PREROUTING -i eth0 -j NFQUEUE --queue-num 1
+  ```
+
+3. Netfilter queue에서 패킷이 터널을 통해야 하는 경우, 위에서 정한 마크 번호에 마춰 마킹을 한다.
+  ```
+  def pkt_callback(pkt): 
+    pkt.set_mark(idx)
+    pkt.accept
+  return pkt_callback
+  ```
+
 패킷 검사에는 python 기반의 scapy란 모듈을 이용하고 있습니다.
 
 기존에는 각 forwarding 방법별로 파일을 구분하고 connector에서 이를 모듈을 불러오는 방식으로 이용했으나 현재는 connector 하나에 합쳐서 동작하도록 설계되었습니다.
