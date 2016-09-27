@@ -15,6 +15,7 @@ import pickle
 
 class SettingManager:
     file_name = '/etc/iproute2/forward.settings'
+    idx = 0
 
     def __init__(self):
 
@@ -29,13 +30,21 @@ class SettingManager:
 
         except EOFError:
             self.settings = {}
-        
+
+        self.set_new_idx() 
 
     def print_settings(self):
+        print
         print 'Printing forward settings'
-
+        print
+        
+        print_target_lst = ['Index', 'Incoming Interface', 'Forward Interface', 'Mode']
+        col_width = max(len(target) for target in print_target_lst) + 2
+        print ''.join(target.ljust(col_width) for target in print_target_lst)
+        
         for k, v in sorted(self.settings.iteritems()):
-            print k, v['forward_inter'], v['mode']
+            print ''.join(target.ljust(col_width) for target in 
+                    [str(v['idx']), k, v['forward_inter'], str(v['mode'])])
 
 
     def update_setting(self):
@@ -48,7 +57,14 @@ class SettingManager:
         print 'Enter forwarding mode: ',
         forward_mode = int(raw_input())
 
-        self.settings[inter_name] = {'forward_inter': forward_inter, 'mode': forward_mode}
+        if inter_name in self.settings:
+            print
+            print 'This interface is already used by another rule'
+            print
+            return
+            
+        self.settings[inter_name] = {'forward_inter': forward_inter, 'mode': forward_mode, 'idx': self.idx}
+        self.idx += 1
 
         if forward_mode == 2:
             filter_file_path = os.path.join(os.getcwd(), 'selective_filter_files', inter_name)
@@ -62,8 +78,15 @@ class SettingManager:
 
 
     def delete_setting(self):
-        print 'Enter ethernet interface name: ',
-        inter_name = raw_input()
+        self.print_settings()
+    
+        print
+        inter_name = raw_input('Enter interface name: ')
+
+        if inter_name not in self.settings:
+            print 'Rule does not exists'
+            print
+            return
 
         self.settings.pop(inter_name, None)
 
@@ -73,6 +96,16 @@ class SettingManager:
 
     def get_settings(self):
         return self.settings
+
+
+    def set_new_idx(self):
+        idx = 0
+        for k, v in self.settings.iteritems():
+            idx = max(v['idx'], idx)
+
+        idx += 1
+
+        self.idx = idx
 
 
 def make_pkt_callback(idx):
@@ -127,6 +160,7 @@ def make_selective_pkt_callback(idx):
                 elif pkt_action == 'reroute':
                     packet.set_mark(idx)
                     packet.accept()
+
     return pkt_callback  
 
 
@@ -173,7 +207,7 @@ def start_forwarding(settings):
         #nfq.bind(idx, lambda pkt: print pkt; pkt.set_mark(idx); pkt.accept())
         nfq.bind(idx, make_pkt_callback(idx))
 
-        if forward_mode == 1:    
+        if forward_mode == 1 or forward_mode == 2:
             cmd = 'iptables -t mangle -I PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
 
         elif forward_mode == 3:
@@ -197,7 +231,7 @@ def start_forwarding(settings):
 
     try:
         print
-        print 'Full forward mode - Starting to forwarding every packet'
+        print 'Start forwarding by rules'
 
         nfq.run()
 
@@ -214,7 +248,7 @@ def start_forwarding(settings):
                 subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
 
             elif forward_mode == 3:
-                cmd = 'iptables -t mangel -D PREROUTING -i %s -j NFQUEUE --queue-num %d -p tcp --dport 6633' % (inter_name, idx)
+                cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d -p tcp --dport 6633' % (inter_name, idx)
 
             cmd = 'ip rule del table %d' % idx
             subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
@@ -254,23 +288,17 @@ def control_delegation():
         print '2. Update forward setting'
         print '3. Delete forward setting'
         print '4. Start forwarding'
-        print '5. Program quit'
-        '''
-        print '1. Full delegation'
-        print '2. Selective delegation'
-        print '3. Openflow forward (OVS needed)'
-        print '4. Program Quit'
-        '''
+        print '0. Program quit'
 
         try:
             print 'Select mode: ',
             selection = int(raw_input())
 
-            if selection not in range(1, 6):
+            if selection not in range(0, 5):
                 raise ValueError
 
         except ValueError:
-            print 'Enter proper number (1~4)'
+            print 'Enter proper number'
             continue
 
         if selection == 1:
@@ -285,7 +313,7 @@ def control_delegation():
         elif selection == 4:
             start_forwarding(setting_manager.get_settings())
 
-        elif selection == 5:
+        elif selection == 0:
             print
             print 'Qutting connector program'
            
