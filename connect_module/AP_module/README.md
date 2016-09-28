@@ -6,13 +6,11 @@ Connect module은 미리 설정된 tunnel을 통해 실제로 Remote AP와 ONOS 
 네트워크 구성은 제일 상위에 있는 README 파일에 설명한 것과 동일하다고 가정합니다.
 
 ### Module 실행
-프로그램은 connector.py 안에 모두 포함되어 있으므로 실행은 sudo 권한을 주고 파이썬 프로그램을 실행하면 됩니다.  
+다음과 같은 코드를 이용해 프로그램을 실행합니다.
 `sudo python connector.py`
 
-이는 해당 프로그램이 linux 경로 상에서 root 권한이 필요한 곳에 접근할 뿐만 아니라 iptable을 조작하는 등의 명령을 수행하기 때문에 필요합니다.
-
 ### Module Interface
-프로그램의 실행하면 5개의 메인 메뉴 항목이 보이게 됩니다. 
+프로그램을 실행하면 5개의 항목이 나오므로 필요에 맞춰 실행합니다.
 
 1. Check forward settings
 
@@ -36,6 +34,6 @@ Connect module은 미리 설정된 tunnel을 통해 실제로 Remote AP와 ONOS 
   
   해당 항목에서는 유저가 기존에 입력해놓은 대로 실제로 포워딩을 시작할 수 있도록 합니다. Forwarding을 수행하는 중에는 외부 입력을 받을 수 없으므로 중지시키려면 Ctrl^c 를 통해서 Interrupt를 발생시켜야 합니다.
   
-5. Program quit
+0. Program quit
   
   해당 항목은 프로그램을 종료시킵니다.

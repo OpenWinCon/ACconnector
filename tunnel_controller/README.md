@@ -7,11 +7,13 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 `sudo python AP.py`
 
 #### Module Overview
-프로그램은 2가지 모드로 구동되는데 하나는 터널의 setting을 관리하기 위한 setting mode이고 다른 하나는 저장된 세팅을 이용해서
-실제 터널을 구축하는 connection mode 입니다.
+프로그램은 2가지 모드를 지원합니다.
+1. Setting mode: 터널을 지원하는 서버 지정 및 해당 서버에서 key file등을 받아오는 과정을 수행
+2. Connection mode: 1의 모드에서 설정한 서버와 실제 연결하는 단계
+
 
 #### Module Interface - Setting mode
-세팅 모드에서는 4가지로 구성된 메뉴가 나오는데 각각 하위에 정리된 것고 ㅏ같습니다.
+세팅 모드에서는 4가지로 구성된 메뉴가 나오는데 각각 하위에 정리된 것과 같습니다.
 
 1. List current OpenVPN settings
   
@@ -26,7 +28,7 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 
   추가되었던 서버의 설정을 삭제합니다.
   
-4. Quit
+0. Quit
 
 #### Module Interface - Connection mode
 커넥션 모드는 5가지로 구성된 메뉴가 있습니다.
@@ -45,6 +47,6 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
   
 4. Check connection status
   
-  아직 동작하지 않는 메뉴입니다.
+  활성화 된 터널의 endpoint에 핑을 보내는 방식을 이용해 터널의 상태를 검사합니다. 정상적으로 동작할 경우 ping response가 돌아오게 되므로 이를 확인하여 결과를 출력합니다.
 
-5. Quit
+0. Quit
