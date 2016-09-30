@@ -46,7 +46,6 @@ def add_active_connection():
     settings_dic = sm.get_settings_dic()
     connections_dic = get_active_connections_dic()
 
-
     sm.print_settings()
 
     print 'Select connection to activate: ',
@@ -71,6 +70,9 @@ def add_active_connection():
             print
 
         else:
+            command = 'sudo iptables -A POSTROUTING -o %s -j MASQUERADE -t nat' % settings_dic[setting_name]['dev_name']
+            subprocess.Popen(command, shell=True, stdout=DEVNULL)
+
             print 'Connection successful'
             print 
             settings_dic[setting_name]['status'] = True
@@ -82,11 +84,8 @@ def add_active_connection():
 
 def del_active_connection():
     connections_dic = get_active_connections_dic() 
-
-    print
-    for k, v in connections_dic.iteritems():
-        print k, v['server_ip'], v['status']
-    print
+    
+    print_active_connections()
 
     print 'Select connection to remove: ',
     connection_name = raw_input()
@@ -101,13 +100,16 @@ def del_active_connection():
     result_process_id = int(lines[1].strip().split(' ')[0])
 
     subprocess.Popen("kill -9 %d" % result_process_id, shell=True)
-
+   
     connections_dic.pop('%s' % connection_name, None)
     
     write_active_connections_file(connections_dic)
 
     settings_dic = sm.get_settings_dic()
     settings_dic[connection_name]['status'] = False
+
+    subprocess.Popen("sudo iptables -D POSTROUTING -o %s -j MASQUERADE -t nat" % settings_dic[connection_name]['dev_name'], shell=True, stdout=DEVNULL)
+
     sm.write_settings_file(settings_dic)
 
 
