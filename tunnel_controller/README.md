@@ -5,8 +5,8 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 기본으로는 AP용 모듈이 설정되어 있습니다.
 
 ### Controller Module 실행
-openvpn 폴더 아래의 Controller.py를 실행시킵니다.
-`sudo python Controller.py`
+openvpn 폴더 아래의 Controller.py를 실행시킵니다.  
+  `sudo python Controller.py`
 
 #### Module specification
 지원 기능
@@ -22,13 +22,13 @@ openvpn 폴더 아래의 Controller.py를 실행시킵니다.
 
 
 ### AP Module 실행
-openvpn 폴더에서 AP.py를 실행시키면 됩니다.
-`sudo python AP.py`
+openvpn 폴더에서 AP.py를 실행시키면 됩니다.  
+  `sudo python AP.py`
 
 #### Module Overview
-프로그램은 2가지 모드를 지원합니다.
-1. Setting mode: 터널을 지원하는 서버 지정 및 해당 서버에서 key file등을 받아오는 과정을 수행
-2. Connection mode: 1의 모드에서 설정한 서버와 실제 연결하는 단계
+프로그램은 2가지 모드를 지원합니다.  
+1. Setting mode: 터널을 지원하는 서버 지정 및 해당 서버에서 key file등을 받아오는 과정을 수행  
+2. Connection mode: 1의 모드에서 설정한 서버와 실제 연결하는 단계  
 
 
 #### Module Interface - Setting mode
