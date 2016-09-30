@@ -1,9 +1,28 @@
 # ACconnector - Tunnel Controller
 
 Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 관리하기 위한 프로그램입니다.
+컨트롤러용 모듈 및 AP용 모듈 두 가지가 제공됩니다.
+기본으로는 AP용 모듈이 설정되어 있습니다.
 
-#### Module 실행
-현재 터널 프로토콜은 openvpn을 사용하고 있으므로 프로그램의 실행 시에는 openvpn 폴더에서 AP.py를 실행시키면 됩니다.
+### Controller Module 실행
+openvpn 폴더 아래의 Controller.py를 실행시킵니다.
+`sudo python Controller.py`
+
+#### Module specification
+지원 기능
+
+1. 현재 연결된 클라이언트 출력
+
+  현재 연결된 클라이언트에 관련된 정보를 출력합니다.
+  
+2. 특정 클라이언트 차단
+
+  현재 연결된 클라이언트 중 차단할 연결을 선택해서 차단합니다.  
+  다만 현재는 해당 클라이언트에서 재접속하는 것을 막지는 못 합니다.
+
+
+### AP Module 실행
+openvpn 폴더에서 AP.py를 실행시키면 됩니다.
 `sudo python AP.py`
 
 #### Module Overview
@@ -11,7 +30,7 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 실제 터널을 구축하는 connection mode 입니다.
 
 #### Module Interface - Setting mode
-세팅 모드에서는 4가지로 구성된 메뉴가 나오는데 각각 하위에 정리된 것고 ㅏ같습니다.
+세팅 모드에서는 4가지로 구성된 메뉴가 나오는데 각각 하위에 정리된 것과 같습니다.
 
 1. List current OpenVPN settings
   
@@ -26,7 +45,7 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 
   추가되었던 서버의 설정을 삭제합니다.
   
-4. Quit
+0. Quit
 
 #### Module Interface - Connection mode
 커넥션 모드는 5가지로 구성된 메뉴가 있습니다.
@@ -46,5 +65,5 @@ Tunnel Controller는 Remote AP와 ONOS subnetwork 사이에 tunnel을 만들고 
 4. Check connection status
   
   아직 동작하지 않는 메뉴입니다.
-
-5. Quit
+  
+0. Quit
