@@ -202,7 +202,13 @@ def start_forwarding(settings):
         #nfq.bind(idx, lambda pkt: print pkt; pkt.set_mark(idx); pkt.accept())
         nfq.bind(idx, make_pkt_callback(idx))
 
-        if forward_mode == 1 or forward_mode == 2:
+#        if inter_name == 'local' and (forward_mode == 1 or forward_mode == 2):
+#            cmd = 'iptables -t mangle -I OUTPUT -j NFQUEUE --queue-num %d' % idx
+
+        if inter_name == 'local' and forward_mode == 3:
+            cmd = 'iptables -t mangle -I OUTPUT -p tcp --dport 6633 -j NFQUEUE --queue-num %d' % idx
+
+        elif forward_mode == 1 or forward_mode == 2:
             cmd = 'iptables -t mangle -I PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
 
         elif forward_mode == 3:
@@ -242,8 +248,11 @@ def start_forwarding(settings):
                 cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
                 subprocess.call(cmd, shell=True, stdout=subprocess.PIPE)
 
-            elif forward_mode == 3:
+            elif forward_mode == 3 and inter_name != 'local':
                 cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d -p tcp --dport 6633' % (inter_name, idx)
+
+            else:
+                cmd = 'iptables -t mangle -D OUTPUT -j NFQUEUE --queue-num %d -p tcp --dport 6633' % idx
 
             cmd = 'ip rule del table %d' % idx
             subprocess.call(cmd, stdout=subprocess.PIPE, shell=True)
