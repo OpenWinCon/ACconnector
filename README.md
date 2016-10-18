@@ -5,11 +5,17 @@ AC connector는 원격에 있는 AP가 Controller의 control을 받을 수 있�
 AP와 Controller를 기존에 존재하는 터널 프로토콜 들을 사용해서 연결하고 필요에 따라서 해당하는
 컨트롤 트래픽이나 데이터 트래픽을 터널을 통해서 전달합니다.
 
-#### 모듈 구성
+### Topology (Basic)
+![Topology image](/README_images/topology.PNG)
+
+#### 특이사항  
+1. 여기서 각각의 원으로 표시된 개체는 ONOS를 제외하면 Ubuntu MATE가 설치된 라즈베리 파이입니다.
+2. Forward Module이 있는 망과 ONOS가 있는 망은 서로 다른 subnet 주소를 사용해야 합니다.
+3. 현재는 Forward module이 AP와 분리되어 있어야 합니다. 차후 이를 통합할 계획이 있습니다만 현재까지는 저렇게 모듈을 분리해 놓습니다.
+
+### 모듈 구성
 1. Tunnel Controller
 2. Connection Manager
-
-### Topology (Basic)
 
 ### Tunnel Controller
 Tunneling Protocol로는 OpenVPN을 사용합니다.
