@@ -111,52 +111,66 @@ def make_pkt_callback(idx):
     return pkt_callback
 
 
-def make_selective_pkt_callback(idx):
-    def pkt_callback(pkt):
-        #data = payload.get_data()
-        pkt = IP(packet.get_payload())
+def make_selective_pkt_callback(idx, filters):
+    proto_filter = filters['proto_filter']
+    addr_filter = filters['addr_filter']
+   
+    proto_type = filters['proto_type']
+    addr_type = filters['addr_type']
 
-        if pkt.proto in proto_filter:
-            pkt_action = proto_filter[pkt.proto]
+    def pkt_sel_callback(pkt):
+        print pkt
+        #data = payload.get_data()
+        ip_pkt = IP(pkt.get_payload())
+        
+        # print ip_pkt.proto, proto_filter
+        if ip_pkt.proto in proto_filter:
+            pkt_action = proto_filter[ip_pkt.proto]
             if pkt_action == 'accept':
-                packet.accept()
+                pkt.accept()
+                return
 
             elif pkt_action == 'drop':
-                packet.drop()
+                pkt.drop()
+                return
                 #payload.verdict(nfqueue.NF_DROP)
 
             elif pkt_action == 'reroute':
-                print 'Packet Rerouting'
-                packet.set_mark(idx)
-                packet.accept()
+                #print 'Packet Rerouting'
+                pkt.set_mark(idx)
+                pkt.accept()
+                return
 
-        if pkt.src in src_addr_filter:
-            pkt_src_port, pkt_action = src_addr_filter[pkt.src]
-            if pkt_src_port == '*' or pkt_src_port == pkt.sport:
+
+        if ip_pkt.src in addr_filter:
+            pkt_src_port, pkt_action = addr_filter[ip_pkt.src]
+            if pkt_src_port == '*' or pkt_src_port == ip_pkt.sport:
                 if pkt_action == 'accept':
-                    packet.accept()
+                    pkt.accept()
                     #payload.set_verdict(nfqueue.NF_ACCEPT)
 
                 elif pkt_action == 'drop':
-                    packet.drop()
+                    pkt.drop()
                     #payload.set_verdict(nfqueue.NF_DROP)
 
-        if pkt.dst in dst_addr_filter:
-            pkt_dst_port, pkt_action = dst_addr_filter[pkt.dst]
-            if pkt_dst_port == '*' or pkt_dst_port == pkt.dport:
+        if ip_pkt.dst in addr_filter:
+            pkt_dst_port, pkt_action = addr_filter[ip_pkt.dst]
+            if pkt_dst_port == '*' or pkt_dst_port == ip_pkt.dport:
                 if pkt_action == 'accept':
-                    packet.accept()
+                    pkt.accept()
                     #payload.set_verdict(nfqueue.NF_ACCEPT)
 
                 elif pkt_action == 'drop':
-                    packet.drop()
+                    pkt.drop()
                     #payload.set_verdict(nfqueue.NF_DROP)
 
                 elif pkt_action == 'reroute':
-                    packet.set_mark(idx)
-                    packet.accept()
+                    pkt.set_mark(idx)
+                    pkt.accept()
 
-    return pkt_callback  
+        #pkt.accept()
+
+    return pkt_sel_callback  
 
 
 def check_tables():
@@ -203,23 +217,31 @@ def make_filters(inter_name):
     addr_filter = {}
     
     if len(addr_lines) == 0:
-        pass
+        addr_type = None
 
     else:
+        addr_type = addr_lines[0]
+        addr_lines = addr_lines[1:]
+
         for addr_line in addr_lines:
-            pass
+            addr_info = addr_line.split(',')
+            addr_filter[addr_info[0]] = [addr_info[1], addr_info[2]]
 
     proto_lines = list(map(lambda x: x.replace('\n', ''), proto_fp.readlines()))
     proto_filter = {}
 
     if len(proto_lines) == 0:
-        pass
+        proto_type = None
 
     else:
+        proto_type = proto_lines[0]
+        proto_lines = proto_lines[1:]
+    
         for proto_line in proto_lines:
-            pass
+            proto_info = proto_line.split(',')
+            proto_filter[int(proto_info[0])] = proto_info[1]
 
-    filters = {'addr': addr_filter, 'addr_type': addr_type, 'proto': proto_filter, 'proto_type': proto_type}
+    filters = {'addr_filter': addr_filter, 'addr_type': addr_type, 'proto_filter': proto_filter, 'proto_type': proto_type}
     return filters
 
     
@@ -280,9 +302,9 @@ def start_forwarding(settings):
         for inter_name, forward_dic in sorted(settings.iteritems()):
             forward_inter, forward_mode = forward_dic['forward_inter'], forward_dic['mode'] 
 
-            if forward_mode == 1:
+            if forward_mode in [1,2]:
                 cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d' % (inter_name, idx)
- 
+
             elif forward_mode == 3 and inter_name != 'local':
                 cmd = 'iptables -t mangle -D PREROUTING -i %s -j NFQUEUE --queue-num %d -p tcp --dport 6633' % (inter_name, idx)
 
